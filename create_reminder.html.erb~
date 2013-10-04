@@ -1,0 +1,90 @@
+  <% form_for @reminder, :url => { :action => "create_reminder" },:html=>{:multipart=>true} do |l| %>
+      <div id="form">
+        <%= error_messages_for :reminder %>
+        <%= hidden_field_tag :recipients, '' %>
+        <% @config = Configuration.available_modules  %>
+        <% if @config.include?('HR') %>
+            <div class="to-options">
+              <%= link_to_remote "#{t('reminder_to_staff')}", :url=>{:controller=>"reminder",:action=>"select_employee_department"},:update=>"select-employee-department", :html=>{:class=>"themed_text"} %>
+            </div>
+        <% else %>
+            <div class="to-options">
+              <%= link_to_remote "#{t('reminder_to_staff')}", :url=>{:controller=>"reminder",:action=>"select_users"},:update=>"select-employee-department", :html=>{:class=>"themed_text"} %>
+            </div>
+        <% end %>
+        <%= image_tag("loader.gif",
+                      :align => "absmiddle",
+                      :border => 0,
+                      :id => "loader",
+                      :style =>"display: none;" ) %>
+        <div class="extender"></div>
+        <% if @config.include?('HR') %>
+            <div id="select-employee-department">
+              <%     @user = current_user %>
+              <%  @departments = EmployeeDepartment.find(:all, :conditions=>"status = true") %>
+              <%=   render :partial=>"reminder/select_employee_department" %>
+            </div>
+        <% end %>
+        <div class="label-field-to">
+          <div id="to_users">
+        </div>
+        </div>
+        <div class="extender"></div>
+
+        <div class="to-options">
+          <%= link_to_remote "#{t('reminder_to_student')}", :url=>{:controller=>"reminder",:action=>"select_student_course"},:update=>"select-student-course", :html=>{:class=>"themed_text"} %>
+        </div>
+        <div class="extender"></div>
+        <div id="select-student-course">
+          <%     @user = current_user %>
+          <%  @batches = Batch.active %>
+          <%=  render :partial=> "reminder/select_student_course" %>
+        </div>
+        <div class="label-field-to">
+          <div id="to_users2"></div>
+        </div>
+      </div>
+      <div class="message">
+        <div id="recipient-list"></div>
+        <div class="label-field-pair">
+          <label for="subject"><%= t('subject_messages') %></label>
+          <div class="text-input-bg"><%= l.text_field :subject %></div>
+        </div>
+
+        <div class="label-field-pair">
+          <label for="subject">Email Id</label>
+          <div class="text-input-bg"><%= l.text_field :email, :value=>'',:rows=>3,:cols=>5 %></div>
+        </div>
+
+        <div class="label-field-pair">
+          <label for="student_grade"><span style="color:red">*</span><%= t('message') %></label>
+          <div class="text-area-bg"><%= fckeditor_textarea :reminder, :body,:lang => I18n.locale,:langdir => (rtl? ? 'rtl' : 'ltr') %>
+          </div>
+        </div>
+        <div class="extender"></div>
+
+              <% l.fields_for :message_addl_attachments do |a| %>
+              <%= render "message_addl_attachment_fields",:f=>a  %>
+          <% end %>
+
+          <div class="add_addl_attachment">
+            <%= link_to_add_addl_attachment "#{image_tag "buttons/add_2.png" } #{t('add_txt')}", l, :message_addl_attachments %>
+          </div>
+          <%#= pradeep_to_add %>
+          <%#= add_asset_link("Add an asset",l) %>
+
+        </div>
+      </div>
+
+      <% unless params[:send_to].nil? %>
+          <script type="text/javascript">
+              send_to = "<%=  params[:send_to] %>";
+              recipient_list = send_to.split(',');
+              for(i=0; i<recipient_list.length; i++)
+                  add_recipient(recipient_list[i]);
+          </script>
+      <% end %>
+      <div id="submit-button">
+        <%=submit_tag "#{t('send')}", :class => 'button', :disable_with => "#{t('please_wait')}" %>
+      </div>
+  <% end %>
